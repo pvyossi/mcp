@@ -1,50 +1,75 @@
-# React + TypeScript + Vite
+# フロントエンド (React + Vite) 詳細
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 1. 概要
 
-Currently, two official plugins are available:
+このフロントエンドアプリケーションは、JavaScriptライブラリであるReactと、ビルドツールViteを使用して構築されています。主な役割は以下の通りです。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+*   ユーザーがAIチャットボットと対話するためのグラフィカルインターフェース（GUI）を提供します。
+*   ユーザーのメッセージをバックエンドAPIに送信し、AIからの応答を受信して表示します。
+*   会話の履歴を画面上に表示し、ユーザーが会話の流れを追えるようにします。
 
-## Expanding the ESLint configuration
+## 2. 主要コンポーネントと機能
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### `src/App.tsx`
 
-- Configure the top-level `parserOptions` property like this:
+このファイルは、アプリケーションの主要なReactコンポーネントであり、チャットインターフェース全体の構造とロジックを管理しています。
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+*   **状態管理 (State)**:
+    *   `inputValue` (string): ユーザーが入力中のメッセージを保持します。
+    *   `chatHistory` (array of objects): これまでの会話の履歴（ユーザーのメッセージとAIの応答）を `{ sender: 'user' | 'ai', message: 'string' }` の形式で格納します。
+    *   `userId` (string): ユーザーを識別するための一意のID。現在は "test-user" という固定値を使用していますが、必要に応じてUUIDなどで動的に生成することも可能です。このIDはバックエンドに送信され、サーバー側でユーザーごとの会話コンテキストを管理するために使用されます。
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+*   **UIレンダリング**:
+    *   **メッセージ表示部分**: `chatHistory` 配列をマッピングし、各メッセージを送信者（ユーザーまたはAI）に応じて異なるスタイルで表示します。これにより、会話の流れが視覚的に分かりやすくなります。
+    *   **入力エリア**: テキスト入力フィールドと送信ボタンで構成されます。ユーザーはここからメッセージを入力し、送信します。
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+*   **API連携 (`handleSendMessage` 関数)**:
+    1.  ユーザーがメッセージを送信すると（送信ボタンのクリックまたはEnterキー押下）、`handleSendMessage` 関数が実行されます。
+    2.  まず、ユーザーのメッセージが `chatHistory` に追加され、画面に表示されます。
+    3.  次に、`fetch` APIを使用してバックエンドの `/api/chat` エンドポイントにPOSTリクエストを送信します。リクエストボディには、JSON形式で `userId` とユーザーのメッセージ (`inputValue`) が含まれます。
+        ```json
+        {
+          "user_id": "test-user", // 現在のユーザーID
+          "message": "こんにちは" // ユーザーが入力したメッセージ
+        }
+        ```
+    4.  バックエンドAPIからAIの応答 (`{ "reply": "AIの応答メッセージ" }`) を受信します。
+    5.  AIの応答メッセージが `chatHistory` に追加され、画面に表示されます。
+    6.  入力フィールド (`inputValue`) はクリアされ、次のメッセージ入力に備えます。
+    7.  API通信中にエラーが発生した場合は、コンソールにエラーを出力し、チャット画面にエラーメッセージを表示します。
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+    この一連の処理により、フロントエンドはバックエンドと連携し、`userId` をキーとしたコンテキスト（文脈）に基づいた会話を実現しています。バックエンドは `userId` を使って過去の会話を記憶し、それに応じた応答を返すことができます。
+
+## 3. 主要ファイルとその役割
+
+*   `src/App.tsx`: チャットインターフェースのメインコンポーネント。UIのレンダリング、状態管理、バックエンドAPIとの通信ロジックを担当します。
+*   `src/App.css`: `App.tsx` コンポーネントのスタイルシート。チャットの外観（色、レイアウトなど）を定義します。
+*   `src/main.tsx`: アプリケーションのエントリーポイント。`App` コンポーネントをHTMLのルート要素にレンダリングします。
+*   `index.html`: アプリケーションのベースとなるHTMLファイル。
+*   `package.json`: プロジェクトの依存関係（React, Viteなど）とスクリプト（起動コマンドなど）を管理します。
+*   `vite.config.ts`: Viteの設定ファイル。
+
+## 4. セットアップと実行方法
+
+1.  **依存関係のインストール**:
+    プロジェクトのルートディレクトリ（この `README.md` があるディレクトリ）で以下のコマンドを実行し、必要なライブラリをインストールします。
+    ```bash
+    npm install
+    ```
+    *Node.jsとnpmがインストールされていない場合は、[公式サイト](https://nodejs.org/)からインストールしてください。*
+
+2.  **開発サーバーの起動**:
+    以下のコマンドで、Vite開発サーバーを起動します。
+    ```bash
+    npm run dev
+    ```
+    サーバーが起動すると、通常 `http://localhost:5173` （またはターミナルに表示される別ポート）でアクセス可能になります。ブラウザでこのURLを開くと、チャットアプリケーションが表示されます。
+
+    開発サーバーはホットリロードに対応しており、コードの変更が即座にブラウザに反映されます。
+
+## 5. 技術スタック
+
+*   **ライブラリ/フレームワーク**: React
+*   **言語**: TypeScript
+*   **ビルドツール**: Vite
+*   **パッケージ管理**: npm
