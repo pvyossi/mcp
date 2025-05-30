@@ -47,8 +47,8 @@ function App() {
     setChatHistory(prevHistory => [...prevHistory, userMessage]);
 
     try {
-      // バックエンドAPI (http://localhost:8000/api/chat) にPOSTリクエストを送信します。
-      const response = await fetch('http://localhost:8000/api/chat', {
+      // バックエンドAPI にPOSTリクエストを送信します。
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chat`, {
         method: 'POST', // HTTPメソッド
         headers: {
           'Content-Type': 'application/json', // リクエストボディの形式をJSONとして指定

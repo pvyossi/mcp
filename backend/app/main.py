@@ -1,7 +1,11 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import psycopg
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Pydanticモデル: APIリクエストとレスポンスのデータ構造を定義します。
 # これにより、データの型検証が自動的に行われます。
@@ -103,13 +107,13 @@ async def chat(request: ChatRequest):
 
 # CORS (Cross-Origin Resource Sharing) ミドルウェアの設定
 # フロントエンドとバックエンドが異なるオリジン（ドメインやポート）で動作する場合に必要。
-# この設定は、すべてのオリジン、すべてのメソッド、すべてのヘッダーを許可する最も緩い設定です。
-# 開発時には便利ですが、本番環境ではセキュリティを考慮してより厳格な設定が推奨されます。
-# Disable CORS. Do not remove this for full-stack development.
+cors_origins = os.getenv('CORS_ALLOW_ORIGINS', '["*"]')
+cors_allow_credentials = os.getenv('CORS_ALLOW_CREDENTIALS', 'true').lower() == 'true'
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
-    allow_credentials=True,
+    allow_origins=eval(cors_origins) if cors_origins.startswith('[') else [cors_origins],
+    allow_credentials=cors_allow_credentials,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
